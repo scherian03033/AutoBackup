@@ -101,3 +101,6 @@ Locally, there should be some number of backup sets, purged by age policy. For n
 a. add a snar set ID to the filename.
 b. when deleting a snar file, move it to a date-keyed name instead. Will need some care around handling L1 and L2 snar files***
 c. when creating a new backup, purge all backups for that target and level that are older than the purge period for that level. Given the decreasing retention period as level goes up, no higher level backup should ever exist when its lower level dependency has been purged.
+
+#TO DO
+* Dynamically check OS and set up tar, chunk, paste accordingly.
