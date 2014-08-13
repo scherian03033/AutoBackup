@@ -7,7 +7,9 @@ TAR=gtar
 
 #chunk size set up to fit on a single DVD
 #CHUNK=4194304
+#chunk size set up for mac testing of small files
 CHUNK=2048
+
 
 usage() {
   echo
@@ -48,17 +50,26 @@ LVL=$3
 DATE=`date +%Y%m%d%H%M`
 STRIP_SRC=`echo $SRC | rev | cut -d/ -f1 | rev`
 
+# Create backup directory if it doesn't exist
 if  ! [ -d $TGT/${STRIP_SRC}/L${LVL} ]; then
   echo "L${LVL} directory does not exist:" ${TGT}/${STRIP_SRC}/L${LVL} ", Creating..."
   mkdir ${TGT}/${STRIP_SRC}/L${LVL}
 fi
 
+# For Level 0 backups, save snar file if it exists. An L1 or L2 may
+# depend on it.
+
 if [ $LVL -eq 0 ]; then
   echo "level 0 backup"
   if [ -f ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar ]; then
-    rm ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar
+#    rm ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar
+    mv ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar \
+     ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}_${DATE}.snar
   fi
   SNAR_LVL=${LVL}
+
+# For L1 or L2 backups, they will build on the snar file of the lower
+# level, so set SNAR_LVL accordingly.
 elif [ $LVL -eq 1 ]; then
   echo "level 1 backup"
   SNAR_LVL=`expr ${LVL} - 1`
@@ -72,8 +83,15 @@ fi
 
 #echo $SRC $TGT $LVL $SNAR_LVL $DATE $STRIP_SRC
 
+# If L0 backup, a new snar file is being created. If L1 or L2
 if [ "$SNAR_LVL" -ne "$LVL" ]; then
-  cp ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${SNAR_LVL}.snar ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar
+# if snar file exists at LVL, save it to a new name before overwriting it.
+  if [ -f ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar ]; then
+    mv ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar \
+     ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}_${DATE}.snar
+  fi
+  cp ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${SNAR_LVL}.snar \
+   ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar
 fi
 
 ${TAR} -g ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar -M -L ${CHUNK} -F ./mpTarHelper.sh -cvpf ${TGT}/${STRIP_SRC}/L${LVL}/${STRIP_SRC}_L${LVL}_${DATE}.tar ${SRC}
