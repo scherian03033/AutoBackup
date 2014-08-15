@@ -1,4 +1,6 @@
 #!/bin/sh
 source ./platform.sh
 
-echo $PLATFORM $SRC_PREFIX $TGT_PREFIX
+MYTITLE="broke stuff"
+MYDETAILS="real bad. Send help please!"
+notify "$MYTITLE" "$MYDETAILS"

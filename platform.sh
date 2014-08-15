@@ -19,4 +19,14 @@ fi
 CFG_FILE=./AutoBackup.cfg
 LOG_FILE=./AutoBackup.log
 
-#!!!! FIX PATH NAMES so that absolute paths are used
+notify() {
+	local title=$1
+	local details=$2
+
+	if [ "$PLATFORM" == "darwin" ]; then
+		notify_cmd=`echo "osascript -e 'display notification \"""$details""\" with title \""${title}"\"'"`
+	eval "$notify_cmd"
+	elif [ "$PLATFORM" == "linux" ]; then
+		echo "hello"
+	fi
+}
