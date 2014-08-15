@@ -61,8 +61,8 @@ getBkupSize() {
 	local level=$2
 	local theDate=$3
 #	echo "$filename $level $theDate"
-	local fileList=`find ${TGT_PREFIX} -name ${filename}_L${level}_${theDate}.tar* \
-						-print`
+	local fileList=`find ${TGT_PREFIX} -name \
+		${filename}_L${level}_${theDate}.tar* -print`
 	foo=`ls -l $fileList | tr -s ' ' |cut -d ' ' -f 5 | paste -sd+ -| bc`
 # remove the trailing - in paste command above for non-OS X
 	echo $foo
@@ -74,27 +74,17 @@ purge() {
 	local cutoff=0
 
 	if [ "$level" == 0 ]; then
-		cutoff=`date -v '-1y' +%Y%m%d`
+		cutoff=365
 	elif [ "$level" == 1 ]; then
-		cutoff=`date -v '-3m' +%Y%m%d`
-	elif [ "$level == 2 " ]; then
-		cutoff=`date -v '-1m' +%Y%m%d`
+		cutoff=90
+	elif [ "$level" == 2 ]; then
+		cutoff=30
 	else
 		echo "purge: invalid level"
 		tellFailure
 	fi
 
-	for i in `find ${TGT_PREFIX} -name ${tgtDir}_L${level}_*.tar* -print`
-	do
-		fileDate=`echo $i|cut -d '/' -f 8|cut -d '.' -f 1|cut -d '_' -f 3|\
-								cut -c'1-8'`
-		# echo $fileDate $i
-		if [ "$fileDate" -lt "$cutoff" ]; then
-			echo "rm $i"
-		else
-			echo "$i newer than $cutoff, not purged"
-		fi
-	done
+	find ${TGT_PREFIX} -name ${tgtDir}_L${level}_*.tar* -mtime +${cutoff} -exec echo "removing " {} \;
 }
 
 ### Main Code
@@ -177,20 +167,14 @@ while read line; do
 	done
 	if [ "$L0Date" -ne 0 ]; then
 		L0Size=$(getBkupSize "$SDIR" 0 "$L0Date")
-		# theFile=`find ${TGT_PREFIX} -name ${SDIR}_L0_${L0Date}.tar -print`
-		# L0Size=`ls -l "$theFile"|tr -s ' ' |cut -d ' '  -f 5`
 		echo ${SDIR}_L0_${L0Date} $L0Size
 	fi
 	if [ "$L1Date" -ne 0 ] && [ "$L1Date" -ge "$L0Date" ]; then
 		L1Size=$(getBkupSize "$SDIR" 1 "$L1Date")
-		# theFile=`find ${TGT_PREFIX} -name ${SDIR}_L1_${L1Date}.tar -print`
-		# L1Size=`ls -l "$theFile"|tr -s ' ' |cut -d ' '  -f 5`
 		echo ${SDIR}_L1_${L1Date} $L1Size
 	fi
 	if [ "$L2Date" -ne 0 ] && [ "$L2Date" -ge "$L1Date" ]; then
 		L2Size=$(getBkupSize "$SDIR" 2 "$L2Date")
-		# theFile=`find ${TGT_PREFIX} -name ${SDIR}_L2_${L2Date}.tar -print`
-		# L2Size=`ls -l "$theFile"|tr -s ' ' |cut -d ' '  -f 5`
 		echo ${SDIR}_L2_${L2Date} $L2Size
 	fi
 	chooseLevel $L0Size $L1Size $L2Size
@@ -205,6 +189,5 @@ while read line; do
 		./incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${LVL}
 	fi
 done < $CFG_FILE > $LOG_FILE 2>&1
-
 
 tellSuccess
