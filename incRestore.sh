@@ -1,9 +1,9 @@
 #!/bin/sh
 #Usage incRestore.sh <tar_file> <tgt_dir>
 
-TAR=gtar
-TGT_PREFIX=`pwd`/volumeUSB1/usbshare/AutoBackup
-HELPER=`pwd`/mpTarHelper.sh
+source ./platform.sh
+
+HELPER=${SCRIPTROOT}/mpTarHelper.sh
 
 usage() {
 	echo

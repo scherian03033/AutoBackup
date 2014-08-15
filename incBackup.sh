@@ -1,15 +1,7 @@
 #!/bin/sh
 #Usage incBackup.sh <source_dir> <tgt_dir> <level>
 
-#for OS X testing, replace tar with gtar on the following line
-#TAR=tar
-TAR=gtar
-
-#chunk size set up to fit on a single DVD
-#CHUNK=4194304
-#chunk size set up for mac testing of small files
-CHUNK=2048
-
+source ./platform.sh
 
 usage() {
   echo

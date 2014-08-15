@@ -30,7 +30,7 @@ Once things wrap back to L0, we must save a copy of the original L0 snar file aw
 			* L2
 				* tar files
 
-**Question:** How can we correlate individual tar and snar files to identify the set to which they belong? Since the same L0 can be part of multiple L0..L2 combinations, putting a set id in the tar file name may not be prudent. 
+**Question:** How can we correlate individual tar and snar files to identify the set to which they belong? Since the same L0 can be part of multiple L0..L2 combinations, putting a set id in the tar file name may not be prudent. **Answer:** Use date.
 
 ## Frequency of Backups
 * L0 backups at least yearly
@@ -84,7 +84,7 @@ Result: old L1 and L2 are now unrestorable because old L0 snar is lost.
 ## Test Status
 1. Test creation of L0, L1, L2 backup sets. **P**
 2. Test wrap back to L0 and correct saving away of snar files. **P**
-3. Test restore of backups from current tar/snar set.
+3. Test restore of backups from current tar/snar set. **P**
 4. Test restore of backups from <date>-saved tar/snar set.
 5. Test purge removes correct files.
 
@@ -99,8 +99,14 @@ Locally, there should be some number of backup sets, purged by age policy. For n
 
 ####Solution
 a. add a snar set ID to the filename.
-b. when deleting a snar file, move it to a date-keyed name instead. Will need some care around handling L1 and L2 snar files***
+b. when deleting a snar file, move it to a date-keyed name instead. Will need some care around handling L1 and L2 snar files - done
 c. when creating a new backup, purge all backups for that target and level that are older than the purge period for that level. Given the decreasing retention period as level goes up, no higher level backup should ever exist when its lower level dependency has been purged.
+It turned out this was not a bug at all. The snar file is not required when restoring tar files. You just have to restore the files in the right order.
 
 #TO DO
-* Dynamically check OS and set up tar, chunk, paste accordingly.
+* Dynamically check OS and set up tar, chunk, paste using uname -a.
+	* especially absolute path name issues
+* Synology notifications - 
+	* http://forum.synology.com/enu/viewtopic.php?f=39&t=63520
+* OS X notification:	osascript -e 'display notification "Lorem ipsum dolor sit amet" with title "Title"'
+* Thorough system test

@@ -2,11 +2,7 @@
 # Usage: doBackup.sh <srcDir | all> <level>
 # where type is 0, 1 or 2
 
-# Remove "." for real application
-SRC_PREFIX=./volume1
-TGT_PREFIX=./volumeUSB1/usbshare/AutoBackup
-CFG_FILE=./AutoBackup.cfg
-LOG_FILE=./AutoBackup.log
+source ./platform.sh
 
 usage() {
 	echo
@@ -204,4 +200,4 @@ while read line; do
 		purge "$SDIR" "${LVL}"
 		./incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${LVL}
 	fi
-done < $CFG_FILE
+done < $CFG_FILE > $LOG_FILE 2>&1

@@ -1,10 +1,7 @@
 #!/bin/sh
 
-CFG_FILE=./AutoBackup.cfg
+source ./platform.sh
 
-# Remove "." for real application
-SRC_PREFIX=./volume1
-TGT_PREFIX=./volumeUSB1/usbshare/AutoBackup
 TGT_PROCD=""
 
 string_contains (){
