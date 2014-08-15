@@ -12,28 +12,28 @@ usage() {
 if [ "$#" -lt 3 ]; then
   echo "Error: too few arguments"
   usage
-  exit 1
+  tellFailure
 fi
 if [ "$#" -gt 3 ]; then
   echo "Error: too many arguments"
   usage
-  exit 1
+  tellFailure
 fi
 if ! [ -d "$1" ]; then
   echo "Error: $1 is not a directory"
   usage
-  exit 1
+  tellFailure
 fi
 if ! [ -d "$2" ]; then
   echo "Error: $2 is not a directory"
   usage
-  exit 1
+  tellFailure
 fi
 
 if [ "$3" -gt 2 ] || [ "$3" -lt 0 ]; then
   echo "Error: <backup_level> was $3; must be an integer value between 0 and 2"
   usage
-  exit 1
+  tellFailure
 fi
 
 SRC=$1
@@ -70,7 +70,7 @@ elif [ $LVL -eq 2 ]; then
   SNAR_LVL=`expr ${LVL} - 1`
 else
   echo "unknown backup level $3, exiting..."
-  exit 1
+  tellFailure
 fi
 
 #echo $SRC $TGT $LVL $SNAR_LVL $DATE $STRIP_SRC

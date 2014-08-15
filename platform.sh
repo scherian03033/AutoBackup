@@ -12,6 +12,7 @@ elif [ "$PLATFORM" == "linux" ]; then
 	SRC_PREFIX=/volume1
 	TGT_PREFIX=/volumeUSB1/usbshare/AutoBackup
 	TAR=tar
+	NOTIFY=/usr/syno/bin/synonotify
 #chunk size set up to fit on a single DVD
 	CHUNK=4194304
 fi
@@ -19,14 +20,28 @@ fi
 CFG_FILE=./AutoBackup.cfg
 LOG_FILE=./AutoBackup.log
 
-notify() {
+osxnotify() {
 	local title=$1
 	local details=$2
 
-	if [ "$PLATFORM" == "darwin" ]; then
-		notify_cmd=`echo "osascript -e 'display notification \"""$details""\" with title \""${title}"\"'"`
+	notify_cmd=`echo "osascript -e 'display notification \"""$details""\" with \
+	 title \""${title}"\"'"`
 	eval "$notify_cmd"
+}
+
+tellSuccess() {
+	if [ "$PLATFORM" == "darwin" ]; then
+		osxnotify "Backup Succeeded" "Happy Happy Joy Joy"
 	elif [ "$PLATFORM" == "linux" ]; then
-		echo "hello"
+		${NOTIFY} LocalBackupFinishedMultiVersion
 	fi
+}
+
+tellFailure() {
+	if [ "$PLATFORM" == "darwin" ]; then
+		osxnotify "Backup Failed" "Go look at logs"
+	elif [ "$PLATFORM" == "linux" ]; then
+		${NOTIFY} LocalBackupErrorMultiVersion
+	fi
+	exit 1
 }

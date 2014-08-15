@@ -8,7 +8,7 @@ usage() {
 	echo
 	echo "Usage: $0 <source dir | all> <backup_level | auto>"
 	echo "  where backup_level is between 0 and 2 inclusive" >&2
-	exit 1
+	tellFailure
 }
 
 isNumber() {
@@ -81,7 +81,7 @@ purge() {
 		cutoff=`date -v '-1m' +%Y%m%d`
 	else
 		echo "purge: invalid level"
-		exit 1
+		tellFailure
 	fi
 
 	for i in `find ${TGT_PREFIX} -name ${tgtDir}_L${level}_*.tar* -print`
@@ -103,17 +103,17 @@ purge() {
 if [ "$#" -lt 2 ]; then
 	echo "Error: too few arguments"
 	usage
-	exit 1
+	tellFailure
 fi
 if [ "$#" -gt 2 ]; then
 	echo "Error: too many arguments"
 	usage
-	exit 1
+	tellFailure
 fi
 if ! [ -d "${SRC_PREFIX}/$1" ] && ! [ "$1" == "all" ]; then
 	echo "Error: ${SRC_PREFIX}/$1 is not a directory"
 	usage
-	exit 1
+	tellFailure
 fi
 
 if isNumber "$2"; then
@@ -121,7 +121,7 @@ if isNumber "$2"; then
 		echo "Error: <backup_level> was $2; must be an integer value between \
 					0 and 2 or use the word auto"
 		usage
-		exit 1
+		tellFailure
 	fi
 	LVL=$2
 elif [ "$2" == "auto" ]; then
@@ -131,7 +131,7 @@ else
 	echo "Error: <backup_level> was $2; must be an integer value between \
 				0 and 2 or use the word auto"
 	usage
-	exit 1
+	tellFailure
 fi
 
 SRC=$1
@@ -167,7 +167,7 @@ while read line; do
 				fi
 			else
 				echo "Filename with bad level $thisLevel"
-				exit 1
+				tellFailure
 			fi
 		fi
 	done
@@ -201,3 +201,5 @@ while read line; do
 		./incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${LVL}
 	fi
 done < $CFG_FILE > $LOG_FILE 2>&1
+
+tellSuccess
