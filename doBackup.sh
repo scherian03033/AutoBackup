@@ -136,8 +136,9 @@ fi
 
 SRC=$1
 
-files=`find ${TGT_PREFIX} -name *.tar -print |rev|cut -d / -f 1|rev|cut -d . \
-				-f 1|sort`
+files=`find ${TGT_PREFIX} -name *.tar -print |perl -ne 'chomp;print scalar \
+ reverse. "\n";'|cut -d / -f 1|perl -ne 'chomp;print scalar reverse. "\n";'| \
+cut -d . -f 1|sort`
 
 while read line; do
 	L0Date=0
@@ -150,24 +151,27 @@ while read line; do
 	TDIR=`echo $line |cut -d ' ' -f 2`
 
 	for i in $files; do
-		if [ "$SDIR" == `echo "$i"|cut -d '_' -f 1` ]; then
-			thisLevel=`echo "$i"|cut -d '_' -f 2`
-			thisDate=`echo "$i"|cut -d '_' -f 3`
-			if [ "$thisLevel" == "L0" ]; then
-				if [ "$thisDate" -gt "$L0Date" ]; then
-					L0Date="$thisDate"
+		FILESRC=`echo "$i"|cut -d '_' -f 1`
+		if [ ${FILESRC} ]; then
+			if [ "$SDIR" == `echo "$i"|cut -d '_' -f 1` ]; then
+				thisLevel=`echo "$i"|cut -d '_' -f 2`
+				thisDate=`echo "$i"|cut -d '_' -f 3`
+				if [ "$thisLevel" == "L0" ]; then
+					if [ "$thisDate" -gt "$L0Date" ]; then
+						L0Date="$thisDate"
+					fi
+				elif [ "$thisLevel" == "L1" ]; then
+					if [ "$thisDate" -gt "$L1Date" ]; then
+						L1Date="$thisDate"
+					fi
+				elif [ "$thisLevel" == "L2" ]; then
+					if [ "$thisDate" -gt "$L2Date" ]; then
+						L2Date="$thisDate"
+					fi
+				else
+					echo "Filename with bad level $thisLevel"
+					tellFailure
 				fi
-			elif [ "$thisLevel" == "L1" ]; then
-				if [ "$thisDate" -gt "$L1Date" ]; then
-					L1Date="$thisDate"
-				fi
-			elif [ "$thisLevel" == "L2" ]; then
-				if [ "$thisDate" -gt "$L2Date" ]; then
-					L2Date="$thisDate"
-				fi
-			else
-				echo "Filename with bad level $thisLevel"
-				tellFailure
 			fi
 		fi
 	done
@@ -195,11 +199,12 @@ while read line; do
 		LVL="$blvl"
 	fi
 
-	if [ "$SDIR" == $SRC ] || [ "$SRC" == "all" ]; then
+	if [ "$SDIR" == "$SRC" ] || [ "$SRC" == "all" ]; then
 		echo "Performing level ${LVL} backup of ${SRC_PREFIX}/${SDIR}"
 		purge "$SDIR" "${LVL}"
 		./incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${LVL}
 	fi
 done < $CFG_FILE > $LOG_FILE 2>&1
+
 
 tellSuccess

@@ -40,7 +40,8 @@ SRC=$1
 TGT=$2
 LVL=$3
 DATE=`date +%Y%m%d%H%M`
-STRIP_SRC=`echo $SRC | rev | cut -d/ -f1 | rev`
+STRIP_SRC=`echo $SRC | perl -ne 'chomp;print scalar reverse. "\n";' | \
+  cut -d/ -f1 | perl -ne 'chomp;print scalar reverse. "\n";'`
 
 # Create backup directory if it doesn't exist
 if  ! [ -d $TGT/${STRIP_SRC}/L${LVL} ]; then
@@ -88,4 +89,4 @@ fi
 
 ${TAR} -g ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar -M -L ${CHUNK} -F ./mpTarHelper.sh -cvpf ${TGT}/${STRIP_SRC}/L${LVL}/${STRIP_SRC}_L${LVL}_${DATE}.tar ${SRC}
 
-echo "Done"
+echo "incBackup Done"

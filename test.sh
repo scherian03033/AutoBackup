@@ -1,6 +1,12 @@
 #!/bin/sh
-source ./platform.sh
+. ./platform.sh
 
-MYTITLE="broke stuff"
-MYDETAILS="real bad. Send help please!"
-osxnotify "$MYTITLE" "$MYDETAILS"
+echo $PLATFORM
+echo $SCRIPTROOT
+echo $SRC_PREFIX
+echo $TGT_PREFIX
+echo $TAR
+echo $CHUNK
+echo $NOTIFY
+echo $CFG_FILE
+echo $LOG_FILE

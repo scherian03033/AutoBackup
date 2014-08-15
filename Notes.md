@@ -110,3 +110,4 @@ It turned out this was not a bug at all. The snar file is not required when rest
 	* http://forum.synology.com/enu/viewtopic.php?f=39&t=63520
 * OS X notification:	osascript -e 'display notification "Lorem ipsum dolor sit amet" with title "Title"'
 * Thorough system test
+* Fix purge for date -v problem

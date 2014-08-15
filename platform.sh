@@ -1,4 +1,4 @@
-PLATFORM=`uname -a | cut -d ' ' -f 1 | tr '[:upper:]' '[:lower:]'`
+PLATFORM=`uname -a | cut -d ' ' -f 1 | tr '[A-Z]' '[a-z]'`
 # returns darwin for mac, linux for NAS
 if [ "$PLATFORM" == "darwin" ]; then
 	SCRIPTROOT=`pwd`
@@ -17,8 +17,8 @@ elif [ "$PLATFORM" == "linux" ]; then
 	CHUNK=4194304
 fi
 
-CFG_FILE=./AutoBackup.cfg
-LOG_FILE=./AutoBackup.log
+CFG_FILE=${SCRIPTROOT}/AutoBackup.cfg
+LOG_FILE=${SCRIPTROOT}/AutoBackup.log
 
 osxnotify() {
 	local title=$1
