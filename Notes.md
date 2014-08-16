@@ -103,11 +103,20 @@ b. when deleting a snar file, move it to a date-keyed name instead. Will need so
 c. when creating a new backup, purge all backups for that target and level that are older than the purge period for that level. Given the decreasing retention period as level goes up, no higher level backup should ever exist when its lower level dependency has been purged.
 It turned out this was not a bug at all. The snar file is not required when restoring tar files. You just have to restore the files in the right order.
 
+####Problem####
+Synology scripts were not running from the scheduler but ran fine from command line.
+####Solution####
+There is almost no PATH loaded when scripts are run from the scheduler. This means you have to provide absolute paths for everything, including other scripts sourced from the running script and utilities. Synology also couldn't handle "date -v" so find was used for purging.  
+
 #TO DO
 * Dynamically check OS and set up tar, chunk, paste using uname -a.
-	* especially absolute path name issues
-* Synology notifications - 
+	* especially absolute path name issues - done
+* Synology notifications - done
 	* http://forum.synology.com/enu/viewtopic.php?f=39&t=63520
-* OS X notification:	osascript -e 'display notification "Lorem ipsum dolor sit amet" with title "Title"'
+* OS X notification:	osascript -e 'display notification "Lorem ipsum dolor sit amet" with title "Title"' - done
 * Thorough system test
-* Fix purge for date -v problem
+* Fix purge for date -v problem - done
+* Unify path name model
+* Change purge so that it doesn't purge the only L0 or L1 available.
+* bc not available on Synology. Replace with perl.
+* fix getBkupSize function

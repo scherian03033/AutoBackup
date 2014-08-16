@@ -1,3 +1,5 @@
+#!/bin/sh
+
 PLATFORM=`uname -a | cut -d ' ' -f 1 | tr '[A-Z]' '[a-z]'`
 # returns darwin for mac, linux for NAS
 if [ "$PLATFORM" == "darwin" ]; then
@@ -8,13 +10,13 @@ if [ "$PLATFORM" == "darwin" ]; then
 #chunk size set up for mac testing of small files
 	CHUNK=2048
 elif [ "$PLATFORM" == "linux" ]; then
-	SCRIPTROOT=/volume1/homes/admin/AutoBackup
+	SCRIPTROOT=/var/services/homes/admin/AutoBackup
 	SRC_PREFIX=/volume1
 	TGT_PREFIX=/volumeUSB1/usbshare/AutoBackup
 	TAR=tar
 	NOTIFY=/usr/syno/bin/synonotify
 #chunk size set up to fit on a single DVD
-	CHUNK=4194304
+	CHUNK=4G
 fi
 
 CFG_FILE=${SCRIPTROOT}/AutoBackup.cfg

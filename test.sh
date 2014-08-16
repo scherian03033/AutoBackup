@@ -1,12 +1,8 @@
 #!/bin/sh
 . ./platform.sh
 
-echo $PLATFORM
-echo $SCRIPTROOT
-echo $SRC_PREFIX
-echo $TGT_PREFIX
-echo $TAR
-echo $CHUNK
-echo $NOTIFY
-echo $CFG_FILE
-echo $LOG_FILE
+l2=10
+l0=2
+#l2_div_l0=`echo $l2 '*' 100 / $l0 |bc`
+l2_div_l0=`perl -e "print $l2 * 100 / $l0" \;`
+echo $l2_div_l0

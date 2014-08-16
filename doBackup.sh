@@ -2,7 +2,7 @@
 # Usage: doBackup.sh <srcDir | all> <level>
 # where type is 0, 1 or 2
 
-source ./platform.sh
+source /var/services/homes/admin/AutoBackup/platform.sh
 
 usage() {
 	echo
@@ -35,12 +35,12 @@ chooseLevel() {
 	local l2_div_l1=100
 
 	if [ "$l0" -ne 0 ]; then
-		l2_div_l0=`echo $l2 '*' 100 / $l0 |bc`
-		l1_div_l0=`echo $l1 '*' 100 / $l0 |bc`
+		l2_div_l0=`perl -e "print $l2 * 100 / $l0" \;`
+		l1_div_l0=`perl -e "print $l1 * 100 / $l0" \;`
 	fi
 
 	if [ "$l1" -ne 0 ]; then
-		l2_div_l1=`echo $l2 '*' 100 / $l1 |bc`
+		l2_div_l1=`perl -e "print $l2 * 100 / $l1" \;`
 	fi
 
 	# echo $l1_div_l0 $l2_div_l0 $l2_div_l1
@@ -186,7 +186,7 @@ while read line; do
 	if [ "$SDIR" == "$SRC" ] || [ "$SRC" == "all" ]; then
 		echo "Performing level ${LVL} backup of ${SRC_PREFIX}/${SDIR}"
 		purge "$SDIR" "${LVL}"
-		./incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${LVL}
+		${SCRIPTROOT}/incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${LVL}
 	fi
 done < $CFG_FILE > $LOG_FILE 2>&1
 

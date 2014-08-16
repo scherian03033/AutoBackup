@@ -1,7 +1,7 @@
 #!/bin/sh
 #Usage incBackup.sh <source_dir> <tgt_dir> <level>
 
-source ./platform.sh
+source /var/services/homes/admin/AutoBackup/platform.sh
 
 usage() {
   echo
@@ -40,8 +40,7 @@ SRC=$1
 TGT=$2
 LVL=$3
 DATE=`date +%Y%m%d%H%M`
-STRIP_SRC=`echo $SRC | perl -ne 'chomp;print scalar reverse. "\n";' | \
-  cut -d/ -f1 | perl -ne 'chomp;print scalar reverse. "\n";'`
+STRIP_SRC=`echo $SRC | perl -ne 'chomp;print scalar reverse. "\n";' | cut -d/ -f1 | perl -ne 'chomp;print scalar reverse. "\n";'`
 
 # Create backup directory if it doesn't exist
 if  ! [ -d $TGT/${STRIP_SRC}/L${LVL} ]; then
@@ -87,6 +86,6 @@ if [ "$SNAR_LVL" -ne "$LVL" ]; then
    ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar
 fi
 
-${TAR} -g ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar -M -L ${CHUNK} -F ./mpTarHelper.sh -cvpf ${TGT}/${STRIP_SRC}/L${LVL}/${STRIP_SRC}_L${LVL}_${DATE}.tar ${SRC}
+${TAR} -g ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar -M -L ${CHUNK} -F ${SCRIPTROOT}/mpTarHelper.sh -cvpf ${TGT}/${STRIP_SRC}/L${LVL}/${STRIP_SRC}_L${LVL}_${DATE}.tar ${SRC}
 
-echo "incBackup Done"
+echo "Done"
