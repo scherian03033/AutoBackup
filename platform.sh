@@ -1,16 +1,14 @@
 #!/bin/sh
 
-PLATFORM=`uname -a | cut -d ' ' -f 1 | tr '[A-Z]' '[a-z]'`
+# PLATFORM=`uname -a | cut -d ' ' -f 1 | tr '[A-Z]' '[a-z]'`
 # returns darwin for mac, linux for NAS
 if [ "$PLATFORM" == "darwin" ]; then
-	SCRIPTROOT=`pwd`
 	SRC_PREFIX=`pwd`/volume1
 	TGT_PREFIX=`pwd`/volumeUSB1/usbshare/AutoBackup
 	TAR=gtar
 #chunk size set up for mac testing of small files
 	CHUNK=2048
 elif [ "$PLATFORM" == "linux" ]; then
-	SCRIPTROOT=/var/services/homes/admin/AutoBackup
 	SRC_PREFIX=/volume1
 	TGT_PREFIX=/volumeUSB1/usbshare/AutoBackup
 	TAR=tar

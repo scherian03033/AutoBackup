@@ -109,14 +109,21 @@ Synology scripts were not running from the scheduler but ran fine from command l
 There is almost no PATH loaded when scripts are run from the scheduler. This means you have to provide absolute paths for everything, including other scripts sourced from the running script and utilities. Synology also couldn't handle "date -v" so find was used for purging.  
 
 #TO DO
+* Thorough system test
+* Path names end up being absolute from root. Make them relative from SRCDIR
+* fix getBkupSize function
+* check last modification date
+	* OSX: find -newermt 'date'
+	* Linux: find -mtime or find -newer <snarfile>
+	
+## DONE
 * Dynamically check OS and set up tar, chunk, paste using uname -a.
 	* especially absolute path name issues - done
 * Synology notifications - done
 	* http://forum.synology.com/enu/viewtopic.php?f=39&t=63520
 * OS X notification:	osascript -e 'display notification "Lorem ipsum dolor sit amet" with title "Title"' - done
-* Thorough system test
 * Fix purge for date -v problem - done
-* Unify path name model
 * Change purge so that it doesn't purge the only L0 or L1 available.
 * bc not available on Synology. Replace with perl.
-* fix getBkupSize function
+* Unify path name model.
+	* check platform at beginning of doBackup.sh and use it to set the SCRIPTDIR. Use scriptdir for everything else.
