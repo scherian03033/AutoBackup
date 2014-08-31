@@ -94,6 +94,10 @@ if [ "$SNAR_LVL" -ne "$LVL" ]; then
    ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar
 fi
 
-${TAR} -g ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar -M -L ${CHUNK} -F ${SCRIPTROOT}/mpTarHelper.sh -cvpf ${TGT}/${STRIP_SRC}/L${LVL}/${STRIP_SRC}_L${LVL}_${DATE}.tar ${SRC}
+#Find the relative source path so that restores are platform-independent
+cd $SRC_PREFIX
+RELSRC="${SRC##$SRC_PREFIX}"
+
+${TAR} -g ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar -M -L ${CHUNK} -F ${SCRIPTROOT}/mpTarHelper.sh -cvpf ${TGT}/${STRIP_SRC}/L${LVL}/${STRIP_SRC}_L${LVL}_${DATE}.tar .${RELSRC}
 
 echo "Done"
