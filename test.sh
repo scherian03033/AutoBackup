@@ -9,8 +9,20 @@ fi
 
 source $SCRIPTROOT/platform.sh
 
-l2=10
-l0=2
-#l2_div_l0=`echo $l2 '*' 100 / $l0 |bc`
-l2_div_l0=`perl -e "print $l2 * 100 / $l0" \;`
-echo $l2_div_l0
+getBkupSize() {
+	local filename=$1
+	local level=$2
+	local theDate=$3
+#	echo "$filename $level $theDate"
+	local fileList=`find ${TGT_PREFIX} -name \
+		${filename}_L${level}_${theDate}.tar* -print`
+
+	local foo=`ls -l $fileList | tr -s ' ' |cut -d ' ' -f 5 | paste -sd+ -`
+# remove the trailing - in paste command above for non-OS X
+	bar=`perl -e "print $foo" \;`
+
+	echo $bar
+}
+
+blargh=$(getBkupSize NetSanjay 0 201408302148)
+echo $blargh

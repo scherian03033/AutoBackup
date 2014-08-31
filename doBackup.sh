@@ -43,12 +43,12 @@ chooseLevel() {
 	local l2_div_l1=100
 
 	if [ "$l0" -ne 0 ]; then
-		l2_div_l0=`perl -e "print $l2 * 100 / $l0" \;`
-		l1_div_l0=`perl -e "print $l1 * 100 / $l0" \;`
+		l2_div_l0=`perl -e "print int($l2 * 100 / $l0)" \;`
+		l1_div_l0=`perl -e "print int($l1 * 100 / $l0)" \;`
 	fi
 
 	if [ "$l1" -ne 0 ]; then
-		l2_div_l1=`perl -e "print $l2 * 100 / $l1" \;`
+		l2_div_l1=`perl -e "print int($l2 * 100 / $l1)" \;`
 	fi
 
 	# echo $l1_div_l0 $l2_div_l0 $l2_div_l1
@@ -61,7 +61,7 @@ chooseLevel() {
 		lvl=2
 	fi
 
-	return $lvl
+	echo $lvl
 }
 
 getBkupSize() {
@@ -71,9 +71,11 @@ getBkupSize() {
 #	echo "$filename $level $theDate"
 	local fileList=`find ${TGT_PREFIX} -name \
 		${filename}_L${level}_${theDate}.tar* -print`
-	foo=`ls -l $fileList | tr -s ' ' |cut -d ' ' -f 5 | paste -sd+ -| bc`
+	local foo=`ls -l $fileList | tr -s ' ' |cut -d ' ' -f 5 | paste -sd+ -`
 # remove the trailing - in paste command above for non-OS X
-	echo $foo
+#	echo $foo
+	local bar=`perl -e "print $foo" \;`
+	echo $bar
 }
 
 purge() {
@@ -148,50 +150,52 @@ while read line; do
 	SDIR=`echo $line |cut -d ' ' -f 1`
 	TDIR=`echo $line |cut -d ' ' -f 2`
 
-	for i in $files; do
-		FILESRC=`echo "$i"|cut -d '_' -f 1`
-		if [ ${FILESRC} ]; then
-			if [ "$SDIR" == `echo "$i"|cut -d '_' -f 1` ]; then
-				thisLevel=`echo "$i"|cut -d '_' -f 2`
-				thisDate=`echo "$i"|cut -d '_' -f 3`
-				if [ "$thisLevel" == "L0" ]; then
-					if [ "$thisDate" -gt "$L0Date" ]; then
-						L0Date="$thisDate"
+	if [ "$SDIR" == "$SRC" ] || [ "$SRC" == "all" ]; then
+		for i in $files; do
+			FILESRC=`echo "$i"|cut -d '_' -f 1`
+			if [ ${FILESRC} ]; then
+				if [ "$SDIR" == `echo "$i"|cut -d '_' -f 1` ]; then
+					thisLevel=`echo "$i"|cut -d '_' -f 2`
+					thisDate=`echo "$i"|cut -d '_' -f 3`
+					if [ "$thisLevel" == "L0" ]; then
+						if [ "$thisDate" -gt "$L0Date" ]; then
+							L0Date="$thisDate"
+						fi
+					elif [ "$thisLevel" == "L1" ]; then
+						if [ "$thisDate" -gt "$L1Date" ]; then
+							L1Date="$thisDate"
+						fi
+					elif [ "$thisLevel" == "L2" ]; then
+						if [ "$thisDate" -gt "$L2Date" ]; then
+							L2Date="$thisDate"
+						fi
+					else
+						echo "Filename with bad level $thisLevel"
+						tellFailure
 					fi
-				elif [ "$thisLevel" == "L1" ]; then
-					if [ "$thisDate" -gt "$L1Date" ]; then
-						L1Date="$thisDate"
-					fi
-				elif [ "$thisLevel" == "L2" ]; then
-					if [ "$thisDate" -gt "$L2Date" ]; then
-						L2Date="$thisDate"
-					fi
-				else
-					echo "Filename with bad level $thisLevel"
-					tellFailure
 				fi
 			fi
+		done
+		if [ "$L0Date" -ne 0 ]; then
+			L0Size=$(getBkupSize "$SDIR" 0 "$L0Date")
+			echo "getBkupSize" ${SDIR}_L0_${L0Date} $L0Size
 		fi
-	done
-	if [ "$L0Date" -ne 0 ]; then
-		L0Size=$(getBkupSize "$SDIR" 0 "$L0Date")
-		echo ${SDIR}_L0_${L0Date} $L0Size
-	fi
-	if [ "$L1Date" -ne 0 ] && [ "$L1Date" -ge "$L0Date" ]; then
-		L1Size=$(getBkupSize "$SDIR" 1 "$L1Date")
-		echo ${SDIR}_L1_${L1Date} $L1Size
-	fi
-	if [ "$L2Date" -ne 0 ] && [ "$L2Date" -ge "$L1Date" ]; then
-		L2Size=$(getBkupSize "$SDIR" 2 "$L2Date")
-		echo ${SDIR}_L2_${L2Date} $L2Size
-	fi
-	chooseLevel $L0Size $L1Size $L2Size
-	blvl="$?"
-	if [ "$LVL" -eq 99 ]; then
-		LVL="$blvl"
-	fi
+		if [ "$L1Date" -ne 0 ] && [ "$L1Date" -ge "$L0Date" ]; then
+			L1Size=$(getBkupSize "$SDIR" 1 "$L1Date")
+			echo "getBkupSize" ${SDIR}_L1_${L1Date} $L1Size
+		fi
+		if [ "$L2Date" -ne 0 ] && [ "$L2Date" -ge "$L1Date" ]; then
+			L2Size=$(getBkupSize "$SDIR" 2 "$L2Date")
+			echo "getBkupSize" ${SDIR}_L2_${L2Date} $L2Size
+		fi
+		echo "chooseLevel: L0Size " $L0Size "L1Size " $L1Size "L2Size " $L2Size
 
-	if [ "$SDIR" == "$SRC" ] || [ "$SRC" == "all" ]; then
+		blvl=$(chooseLevel $L0Size $L1Size $L2Size)
+
+		if [ "$LVL" -eq 99 ]; then
+			LVL="$blvl"
+		fi
+
 		echo "Performing level ${LVL} backup of ${SRC_PREFIX}/${SDIR}"
 		purge "$SDIR" "${LVL}"
 		${SCRIPTROOT}/incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${LVL}

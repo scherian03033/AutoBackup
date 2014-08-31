@@ -110,7 +110,6 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 
 #TO DO
 * Thorough system test
-* Path names end up being absolute from root. Make them relative from SRCDIR
 * fix getBkupSize function
 * check last modification date
 	* OSX: find -newermt 'date'
@@ -127,3 +126,4 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 * bc not available on Synology. Replace with perl.
 * Unify path name model.
 	* check platform at beginning of doBackup.sh and use it to set the SCRIPTDIR. Use scriptdir for everything else.
+* Path names end up being absolute from root. Make them relative from SRCDIR
