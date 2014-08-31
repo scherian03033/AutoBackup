@@ -190,15 +190,15 @@ while read line; do
 		fi
 		echo "chooseLevel: L0Size " $L0Size "L1Size " $L1Size "L2Size " $L2Size
 
-		blvl=$(chooseLevel $L0Size $L1Size $L2Size)
-
 		if [ "$LVL" -eq 99 ]; then
-			LVL="$blvl"
+			BKUP_LVL="$(chooseLevel $L0Size $L1Size $L2Size)"
+		else
+			BKUP_LVL="$LVL"
 		fi
 
-		echo "Performing level ${LVL} backup of ${SRC_PREFIX}/${SDIR}"
-		purge "$SDIR" "${LVL}"
-		${SCRIPTROOT}/incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${LVL}
+		echo "Performing level ${BKUP_LVL} backup of ${SRC_PREFIX}/${SDIR}"
+		purge "$SDIR" "${BKUP_LVL}"
+		${SCRIPTROOT}/incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${BKUP_LVL}
 	fi
 done < $CFG_FILE > $LOG_FILE 2>&1
 

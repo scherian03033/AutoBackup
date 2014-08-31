@@ -40,14 +40,14 @@ Once things wrap back to L0, we must save a copy of the original L0 snar file aw
 ## Retention Policy
 
 ### Local Storage
-Keep local backups until they trigger the purge policy. 
+Keep local backups until they trigger the purge policy.
 
 ### Offsite Glacier Storage
 	When backup is complete
 		compare the most recent backup set to what's on Glacier
 		If it's completely new
 			Upload it
-		Delete any backup set that's older than 3 months 
+		Delete any backup set that's older than 3 months
 
 ## Purging Policy
 * purge L0 backups after 1 year
@@ -109,12 +109,12 @@ Synology scripts were not running from the scheduler but ran fine from command l
 There is almost no PATH loaded when scripts are run from the scheduler. This means you have to provide absolute paths for everything, including other scripts sourced from the running script and utilities. Synology also couldn't handle "date -v" so find was used for purging.  
 
 #TO DO
+* Thorough code walkthrough / unit test
 * Thorough system test
-* fix getBkupSize function
-* check last modification date
+* check last modification date before deciding to do a backup
 	* OSX: find -newermt 'date'
 	* Linux: find -mtime or find -newer <snarfile>
-	
+
 ## DONE
 * Dynamically check OS and set up tar, chunk, paste using uname -a.
 	* especially absolute path name issues - done
@@ -127,3 +127,4 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 * Unify path name model.
 	* check platform at beginning of doBackup.sh and use it to set the SCRIPTDIR. Use scriptdir for everything else.
 * Path names end up being absolute from root. Make them relative from SRCDIR
+* fix getBkupSize function
