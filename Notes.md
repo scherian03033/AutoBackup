@@ -82,9 +82,9 @@ doBackup.sh all auto - created NetSanjay_L0<1440>.tar and saved away NetSanjay_L
 
 Result: old L1 and L2 are now unrestorable because old L0 snar is lost.
 ## Test Status
-1. Test creation of L0, L1, L2 backup sets. **P**
-2. Test wrap back to L0 and correct saving away of snar files. **P**
-3. Test restore of backups from current tar/snar set. **P**
+1. Test creation of L0, L1, L2 backup sets.
+2. Test wrap back to L0 and correct saving away of snar files.
+3. Test restore of backups from current tar/snar set.
 4. Test restore of backups from <date>-saved tar/snar set.
 5. Test purge removes correct files.
 
@@ -109,6 +109,7 @@ Synology scripts were not running from the scheduler but ran fine from command l
 There is almost no PATH loaded when scripts are run from the scheduler. This means you have to provide absolute paths for everything, including other scripts sourced from the running script and utilities. Synology also couldn't handle "date -v" so find was used for purging.  
 
 #TO DO
+* Make sure "no file change" takes precedence over new backup level needed
 * Thorough code walkthrough / unit test
 * Thorough system test
 
@@ -126,3 +127,5 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 * Path names end up being absolute from root. Make them relative from SRCDIR
 * fix getBkupSize function
 * check last modification date before deciding to do a backup using find -newer <reference_file>
+* save copy of log file before overwriting it
+* make purge handle old Autobackup.log files
