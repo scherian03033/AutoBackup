@@ -84,15 +84,17 @@ changedSince() {
 
 	if [ -f $refFile ]; then
 		local fileList=`find $dir -newer $refFile -print`
-		echo $fileList
 		if [ -z "${fileList// }" ]; then
 			# no files have changed since $refFile
 			return 1
 		else
+			echo "Files Changed:"
+			echo $fileList
 			return 0
 		fi
 	else
 		# no reference file, act as if files have changed since reference
+		echo "No tar files found, doing first backup."
 		return 0
 	fi
 }
@@ -113,8 +115,8 @@ purge() {
 		tellFailure
 	fi
 
-	find ${TGT_PREFIX} -name '${tgtDir}_L${level}_*.tar*' -mtime +${cutoff} -exec echo "removing " {} \;
-	find ${SCRIPTROOT} -name '*_*.log' -mtime +30 -exec echo "removing " {} \;
+	find ${TGT_PREFIX} -name '${tgtDir}_L${level}_*.tar*' -mtime +${cutoff} -exec rm {} \;
+	find ${SCRIPTROOT} -name '*_*.log' -mtime +30 -exec rm {} \;
 }
 
 ### Main Code
@@ -245,10 +247,11 @@ while read line; do
 			purge "$SDIR" "${BKUP_LVL}"
 			${SCRIPTROOT}/incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${BKUP_LVL}
 		else
-			echo "no files changed, backup skipped"
+			echo "$SDIR: no files changed, backup skipped"
 		fi
 
 	fi
+	echo
 done < $CFG_FILE > $LOG_FILE 2>&1
 
 tellSuccess
