@@ -71,10 +71,10 @@ getBkupSize() {
 #	echo "$filename $level $theDate"
 	local fileList=`find ${TGT_PREFIX} -name \
 		${filename}_L${level}_${theDate}.tar* -print`
-	local foo=`ls -l $fileList | tr -s ' ' |cut -d ' ' -f 5 | paste -sd+ -`
-# remove the trailing - in paste command above for non-OS X
+	local foo=`ls -l $fileList | tr -s ' ' |cut -d ' ' -f 5 | sed -e 's/ /+/g'`
 #	echo $foo
-	local bar=`perl -e "print $foo" \;`
+	local doo=`echo $foo | sed -e 's/ /+/g'`
+	local bar=`perl -e "print $doo" \;`
 	echo $bar
 }
 

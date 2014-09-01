@@ -125,7 +125,7 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 * Unify path name model.
 	* check platform at beginning of doBackup.sh and use it to set the SCRIPTDIR. Use scriptdir for everything else.
 * Path names end up being absolute from root. Make them relative from SRCDIR
-* fix getBkupSize function
 * check last modification date before deciding to do a backup using find -newer <reference_file>
 * save copy of log file before overwriting it
 * make purge handle old Autobackup.log files
+* fix getBkupSize function for Linux - no paste, replace with perl
