@@ -111,9 +111,6 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 #TO DO
 * Thorough code walkthrough / unit test
 * Thorough system test
-* check last modification date before deciding to do a backup
-	* OSX: find -newermt 'date'
-	* Linux: find -mtime or find -newer <snarfile>
 
 ## DONE
 * Dynamically check OS and set up tar, chunk, paste using uname -a.
@@ -128,3 +125,4 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 	* check platform at beginning of doBackup.sh and use it to set the SCRIPTDIR. Use scriptdir for everything else.
 * Path names end up being absolute from root. Make them relative from SRCDIR
 * fix getBkupSize function
+* check last modification date before deciding to do a backup using find -newer <reference_file>

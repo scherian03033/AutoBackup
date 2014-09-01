@@ -78,6 +78,25 @@ getBkupSize() {
 	echo $bar
 }
 
+changedSince() {
+	local dir=$1
+	local refFile=$2
+
+	if [ -f $refFile ]; then
+		local fileList=`find $dir -newer $refFile -print`
+		# echo $fileList
+		if [ -z "${fileList// }" ]; then
+			# no files have changed since $refFile
+			return 1
+		else
+			return 0
+		fi
+	else
+		# no reference file, act as if files have changed since reference
+		return 0
+	fi
+}
+
 purge() {
 	local tgtDir=$1
 	local level=$2
@@ -140,6 +159,10 @@ files=`find ${TGT_PREFIX} -name *.tar -print |perl -ne 'chomp;print scalar \
  reverse. "\n";'|cut -d / -f 1|perl -ne 'chomp;print scalar reverse. "\n";'| \
 cut -d . -f 1|sort`
 
+# Save AutoBackup.log
+DT=`date +%Y%m%d%H%M`
+mv $LOG_FILE ${LOG_FILE/.log/_$DT.log}
+
 while read line; do
 	L0Date=0
 	L1Date=0
@@ -176,6 +199,7 @@ while read line; do
 				fi
 			fi
 		done
+
 		if [ "$L0Date" -ne 0 ]; then
 			L0Size=$(getBkupSize "$SDIR" 0 "$L0Date")
 			echo "getBkupSize" ${SDIR}_L0_${L0Date} $L0Size
@@ -196,9 +220,33 @@ while read line; do
 			BKUP_LVL="$LVL"
 		fi
 
-		echo "Performing level ${BKUP_LVL} backup of ${SRC_PREFIX}/${SDIR}"
-		purge "$SDIR" "${BKUP_LVL}"
-		${SCRIPTROOT}/incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${BKUP_LVL}
+		#find most recent backup date
+		if [ "$L0Date" -gt "$L1Date" ]; then
+			if [ "$L0Date" -gt "$L2Date" ]; then
+				LASTTAR="${TGT_PREFIX}/${TDIR}/${SDIR}/L0/${SDIR}_L0_${L0Date}.tar"
+			else
+				LASTTAR="${TGT_PREFIX}/${TDIR}/${SDIR}/L2/${SDIR}_L2_${L2Date}.tar"
+			fi
+		else
+			if [ "$L1Date" -gt "$L2Date" ]; then
+				LASTTAR="${TGT_PREFIX}/${TDIR}/${SDIR}/L1/${SDIR}_L1_${L1Date}.tar"
+			else
+				LASTTAR="${TGT_PREFIX}/${TDIR}/${SDIR}/L2/${SDIR}_L2_${L2Date}.tar"
+			fi
+		fi
+
+		echo "Most recent backup was ${LASTTAR}"
+
+		# Find if files changed since $LASTTAR
+		changedSince ${SRC_PREFIX}/${SDIR} ${LASTTAR}
+		if [ $? -eq 0 ]; then
+			echo "Performing level ${BKUP_LVL} backup of ${SRC_PREFIX}/${SDIR}"
+			purge "$SDIR" "${BKUP_LVL}"
+			${SCRIPTROOT}/incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${BKUP_LVL}
+		else
+			echo "no files changed, backup skipped"
+		fi
+
 	fi
 done < $CFG_FILE > $LOG_FILE 2>&1
 

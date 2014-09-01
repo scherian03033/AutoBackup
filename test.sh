@@ -9,20 +9,28 @@ fi
 
 source $SCRIPTROOT/platform.sh
 
-getBkupSize() {
-	local filename=$1
-	local level=$2
-	local theDate=$3
-#	echo "$filename $level $theDate"
-	local fileList=`find ${TGT_PREFIX} -name \
-		${filename}_L${level}_${theDate}.tar* -print`
+changedSince() {
+	local dir=$1
+	local refFile=$2
+	# local d1=`echo $2| cut -c1-8`
+	# local d2=`echo $2| cut -c9-12`
+	#
+	# local date=`echo "$d1 $d2"`
+	# local fileList=`find $dir -newermt "$date" -print`
+	# echo $date
+	# echo $fileList
 
-	local foo=`ls -l $fileList | tr -s ' ' |cut -d ' ' -f 5 | paste -sd+ -`
-# remove the trailing - in paste command above for non-OS X
-	bar=`perl -e "print $foo" \;`
-
-	echo $bar
+	local fileList=`find $dir -newer $refFile -print`
+	if [ -z "${fileList// }" ]; then
+		return 1
+	else
+		return 0
+	fi
 }
 
-blargh=$(getBkupSize NetSanjay 0 201408302148)
-echo $blargh
+changedSince ${SRC_PREFIX}/NetSanjay foo
+if [ $? -eq 0 ]; then
+	echo "files changed"
+else
+	echo "no files changed"
+fi
