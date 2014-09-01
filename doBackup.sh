@@ -84,7 +84,7 @@ changedSince() {
 
 	if [ -f $refFile ]; then
 		local fileList=`find $dir -newer $refFile -print`
-		# echo $fileList
+		echo $fileList
 		if [ -z "${fileList// }" ]; then
 			# no files have changed since $refFile
 			return 1
@@ -113,8 +113,8 @@ purge() {
 		tellFailure
 	fi
 
-	find ${TGT_PREFIX} -name ${tgtDir}_L${level}_*.tar* -mtime +${cutoff} -exec echo "removing " {} \;
-	find ${SCRIPTROOT} -name *_*.log -mtime +30 -exec echo "removing " {} \;	
+	find ${TGT_PREFIX} -name '${tgtDir}_L${level}_*.tar*' -mtime +${cutoff} -exec echo "removing " {} \;
+	find ${SCRIPTROOT} -name '*_*.log' -mtime +30 -exec echo "removing " {} \;
 }
 
 ### Main Code
