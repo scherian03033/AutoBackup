@@ -38,6 +38,7 @@ if ! [ -d "$2" ]; then
 	exit 1
 fi
 
+# Restore contents of a single tar file to $RESTOREDIR
 doRestore() {
 	local BKUPFILE=$1
 	echo "restoring" $1
@@ -45,10 +46,15 @@ doRestore() {
 	${TAR} xvf ${BKUPFILE} -g /dev/null -M -F ${HELPER}
 }
 
+# given a backup source and level and a date, find the newest date that is
+# older than the given date and restore it.
+
 restoreLatestBackup() {
 	local BKUPSRC=$1
 	local BKUPLEVEL=$2
 	local BKUPDATE=$3
+
+	# this line gets all matching backups and sorts it from newest to oldest
 	for i in `find ${TGT_PREFIX} -name ${BKUPSRC}_L${BKUPLEVEL}_*.tar -print | sort -r`
 	do
 		local FDATE=`echo "$i" |cut -d '_' -f 3|cut -d '.' -f 1`
@@ -59,6 +65,7 @@ restoreLatestBackup() {
 	done
 
 	echo "ERROR: Missing backup at level ${BKUPLEVEL} for ${BKUPSRC}"
+	exit 1
 }
 
 RESTOREDIR=$2

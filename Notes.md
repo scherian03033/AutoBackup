@@ -61,8 +61,58 @@ from the restore location:
 The SNAR_FILE can be /dev/null since the tar chunk knows what to do.
 -M or --multi-volume tells tar multiple files exist.
 # Testing
-## Test Run
-prepBackupDirs.sh - worked
+## Test Conditions
+### prepBackupDirs.sh
+1. Non-existent target directory
+2. Already existing target subdirectory
+
+### doBackup.sh
+1. Backup of a single source directory - automatic
+	* First in cfg file
+	* Last in cfg file
+2. Backup of a single source directory - specified level
+	* L0
+		* when L0 doesn't exist
+		* when L0 already exists
+	* L1
+		* when L0 doesn't exist
+		* when L0 exists and L1 doesn't exist
+		* when L0 exists and L1 exists
+	* L2
+		* when L1 doesn't exist
+		* when L1 exists and L2 doesn't exist
+		* when L1 exists and L2 exists
+3. Backup of a single source directory - auto
+	* when no backup exists
+	* when L0 exists
+	* when L0 and L1 exist
+		* and L1 is the correct next level
+		* and L2 is the correct next level
+	* when L0, L1 and L2 exist
+		* and L0 is the correct next level
+		* and L1 is the correct next level
+		* and L2 is the correct next level
+4. Backup of all source directories - auto (variants should be covered by above)
+5. Purge of old files
+
+### incRestore.sh
+1. when most recent backup is an L0
+2. when most recent backup is an L1
+	* and older L1 exists
+	* and older L1 and L2 exist
+	* and corresponding L0 is missing 
+3. when most recent backup is an L2
+	* and older L1 exists but older L0 is missing
+	* and older L1 is missing but older L0 exists
+	* and older L1 is missing and older L0 is missing
+	* older L1 and L0 exist
+
+# E2E Test Run
+###prepBackupDirs.sh
+1. Run with no AutoBackup target dir - created it. P
+2. Run with stuff already in target directories - deleted stuff. P
+
+###asdf
 
 added pdf to NetSanjay (7.4MB)
 
@@ -109,7 +159,6 @@ Synology scripts were not running from the scheduler but ran fine from command l
 There is almost no PATH loaded when scripts are run from the scheduler. This means you have to provide absolute paths for everything, including other scripts sourced from the running script and utilities. Synology also couldn't handle "date -v" so find was used for purging.  
 
 #TO DO
-* Make sure "no file change" takes precedence over new backup level needed
 * Thorough code walkthrough / unit test
 * Thorough system test
 
@@ -129,3 +178,4 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 * save copy of log file before overwriting it
 * make purge handle old Autobackup.log files
 * fix getBkupSize function for Linux - no paste, replace with perl
+* Make sure "no file change" takes precedence over new backup level needed

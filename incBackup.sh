@@ -48,7 +48,8 @@ SRC=$1
 TGT=$2
 LVL=$3
 DATE=`date +%Y%m%d%H%M`
-STRIP_SRC=`echo $SRC | perl -ne 'chomp;print scalar reverse. "\n";' | cut -d/ -f1 | perl -ne 'chomp;print scalar reverse. "\n";'`
+STRIP_SRC=`echo $SRC | perl -ne 'chomp;print scalar reverse. "\n";' | cut -d/ -f1 | \
+  perl -ne 'chomp;print scalar reverse. "\n";'`
 
 # Create backup directory if it doesn't exist
 if  ! [ -d $TGT/${STRIP_SRC}/L${LVL} ]; then
@@ -57,19 +58,12 @@ if  ! [ -d $TGT/${STRIP_SRC}/L${LVL} ]; then
 fi
 
 # For Level 0 backups, save snar file if it exists. An L1 or L2 may
-# depend on it.
+# depend on it. For L1 or L2 backups, they will build on the snar file of the
+# lower level, so set SNAR_LVL accordingly.
 
 if [ $LVL -eq 0 ]; then
   echo "level 0 backup"
-  if [ -f ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar ]; then
-#    rm ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar
-    mv ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar \
-     ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}_${DATE}.snar
-  fi
   SNAR_LVL=${LVL}
-
-# For L1 or L2 backups, they will build on the snar file of the lower
-# level, so set SNAR_LVL accordingly.
 elif [ $LVL -eq 1 ]; then
   echo "level 1 backup"
   SNAR_LVL=`expr ${LVL} - 1`
@@ -81,15 +75,20 @@ else
   tellFailure
 fi
 
-#echo $SRC $TGT $LVL $SNAR_LVL $DATE $STRIP_SRC
-
-# If L0 backup, a new snar file is being created. If L1 or L2
-if [ "$SNAR_LVL" -ne "$LVL" ]; then
 # if snar file exists at LVL, save it to a new name before overwriting it.
-  if [ -f ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar ]; then
-    mv ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar \
-     ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}_${DATE}.snar
-  fi
+
+if [ -f ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar ]; then
+  mv ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar \
+   ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}_${DATE}.snar
+fi
+
+# If L1 or L2 backup, copy the lower level snar file to this level before doing
+# a backup. If L0, no need to do anything because the backup will create a new
+# file. The copy is done so that if the snar file at the lower level is over-
+# written with another incremental backup, you can still do a manual incremental
+# backup against this backup.
+
+if [ "$SNAR_LVL" -ne "$LVL" ]; then
   cp ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${SNAR_LVL}.snar \
    ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar
 fi
@@ -98,6 +97,8 @@ fi
 cd $SRC_PREFIX
 RELSRC="${SRC##$SRC_PREFIX}"
 
-${TAR} -g ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar -M -L ${CHUNK} -F ${SCRIPTROOT}/mpTarHelper.sh -cvpf ${TGT}/${STRIP_SRC}/L${LVL}/${STRIP_SRC}_L${LVL}_${DATE}.tar .${RELSRC}
+${TAR} -g ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar -M -L ${CHUNK} \
+  -F ${SCRIPTROOT}/mpTarHelper.sh \
+  -cvpf ${TGT}/${STRIP_SRC}/L${LVL}/${STRIP_SRC}_L${LVL}_${DATE}.tar .${RELSRC}
 
 echo "Done"

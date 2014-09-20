@@ -29,19 +29,27 @@ isNumber() {
 	fi
 }
 
+# Given the size of files at each tar level, pick appropriate next level
+# for backup. If a backup file doesn't exist, 0 is passed as the size. This
+# results in the conclusion that the incremental has gotten too big, which has
+# the desired effect of triggering a new lower level backup.
+# Note that it's not predictive based on change in the current
+# backup cycle but reactive to how big previous backups have gotten.
+# Cutoff is the percentage of the lower level backup size that this level
+# has gotten, e.g. 20 means L1 is 20% as big as L0, so you might as well
+# create a new L0 next time.
+
 chooseLevel() {
 	local l0=$1
 	local l1=$2
 	local l2=$3
 	local cutoff=20
-	local lvl=5
-
-	# echo chooseLevel called with $1 $2 $3
-
+	local lvl=5							# 5 can never be returned, so placeholder
 	local l2_div_l0=100
 	local l1_div_l0=100
 	local l2_div_l1=100
 
+	# Check for div/0
 	if [ "$l0" -ne 0 ]; then
 		l2_div_l0=`perl -e "print int($l2 * 100 / $l0)" \;`
 		l1_div_l0=`perl -e "print int($l1 * 100 / $l0)" \;`
@@ -51,8 +59,9 @@ chooseLevel() {
 		l2_div_l1=`perl -e "print int($l2 * 100 / $l1)" \;`
 	fi
 
-	# echo $l1_div_l0 $l2_div_l0 $l2_div_l1
-
+	# If either l1 or l2 have gotten too big relative to l0, do a new l0
+	# If l2 is small compared to l0 but big compared to l1, do a new l1
+	# Otherwise, just do another l2
 	if [ "$l1_div_l0" -gt "$cutoff" ] || [ "$l2_div_l0" -gt "$cutoff" ]; then
 		lvl=0
 	elif [ "$l2_div_l1" -gt "$cutoff" ]; then
@@ -64,6 +73,8 @@ chooseLevel() {
 	echo $lvl
 }
 
+# given a source directory, backup level and backup date, find the size of
+# that particular backup by summing the size of all the tar chunks in it.
 getBkupSize() {
 	local filename=$1
 	local level=$2
@@ -71,19 +82,28 @@ getBkupSize() {
 #	echo "$filename $level $theDate"
 	local fileList=`find ${TGT_PREFIX} -name \
 		${filename}_L${level}_${theDate}.tar* -print`
-	local foo=`ls -l $fileList | tr -s ' ' |cut -d ' ' -f 5 | sed -e 's/ /+/g'`
-#	echo $foo
+	local foo=`ls -l $fileList | tr -s ' ' |cut -d ' ' -f 5`
+
+	# take the above list of sizes and replace all intermediate spaces with +
+	# then pass the string to perl for execution. Return resulting sum.
 	local doo=`echo $foo | sed -e 's/ /+/g'`
 	local bar=`perl -e "print $doo" \;`
 	echo $bar
 }
 
+# Return 0 if any files in dir have changed since the modification of refFile
+# Return 1 otherwise. This is used to decide whether to do a backup at all.
+# If refFile doesn't exist at all, return 0 so that a first backup will be
+# triggered.
 changedSince() {
 	local dir=$1
 	local refFile=$2
 
 	if [ -f $refFile ]; then
+		# find all files newer than refFile in dir
 		local fileList=`find $dir -newer $refFile -print`
+
+		# if the result list is empty, no change
 		if [ -z "${fileList// }" ]; then
 			# no files have changed since $refFile
 			return 1
@@ -99,11 +119,16 @@ changedSince() {
 	fi
 }
 
+# Given a target directory and backup level, delete all files matching that
+# pattern that are older than the cutoff number of days for that level.
+# This purge is not aggressive enough to preserve disk space but I will let
+# experience guide what the cutoffs should be set to.
 purge() {
 	local tgtDir=$1
 	local level=$2
 	local cutoff=0
 
+#	L0 backups are kept a year, #L1s are kept 3 months, L2s are kept 1 month
 	if [ "$level" == 0 ]; then
 		cutoff=365
 	elif [ "$level" == 1 ]; then
@@ -115,7 +140,11 @@ purge() {
 		tellFailure
 	fi
 
-	find ${TGT_PREFIX} -name '${tgtDir}_L${level}_*.tar*' -mtime +${cutoff} -exec rm {} \;
+	# purge tar files
+	find ${TGT_PREFIX} -name '${tgtDir}_L${level}_*.tar*' \
+		-mtime +${cutoff} -exec rm {} \;
+
+	# purge logs older than 30 days
 	find ${SCRIPTROOT} -name '*_*.log' -mtime +30 -exec rm {} \;
 }
 
@@ -158,6 +187,10 @@ fi
 
 SRC=$1
 
+# Get list of tar files in target directory, minus leading path so only the
+# actual filenames are returned. The perl program does a reverse since other
+# utilities I'm used to aren't on both platforms.
+
 files=`find ${TGT_PREFIX} -name *.tar -print |perl -ne 'chomp;print scalar \
  reverse. "\n";'|cut -d / -f 1|perl -ne 'chomp;print scalar reverse. "\n";'| \
 cut -d . -f 1|sort`
@@ -166,6 +199,7 @@ cut -d . -f 1|sort`
 DT=`date +%Y%m%d%H%M`
 mv $LOG_FILE ${LOG_FILE/.log/_$DT.log}
 
+# Loop over every line in the config file which looks like srcDir tgtDir
 while read line; do
 	L0Date=0
 	L1Date=0
@@ -176,7 +210,17 @@ while read line; do
 	SDIR=`echo $line |cut -d ' ' -f 1`
 	TDIR=`echo $line |cut -d ' ' -f 2`
 
+	# purge old backups at each level from this source directory
+	purge "$SDIR" 2
+	purge "$SDIR" 1
+	purge "$SDIR" 0
+
+	# if we weren't asked to backup this directory, skip it
 	if [ "$SDIR" == "$SRC" ] || [ "$SRC" == "all" ]; then
+		# walk the list of  tar files and save the latest dates at each
+		# backup level for those that match this source. Not efficient
+		# to walk the whole tar list for each source but I'm too lazy to
+		# prune as we go
 		for i in $files; do
 			FILESRC=`echo "$i"|cut -d '_' -f 1`
 			if [ ${FILESRC} ]; then
@@ -203,6 +247,7 @@ while read line; do
 			fi
 		done
 
+		# find the size of the latest backup at each lovel for this source
 		if [ "$L0Date" -ne 0 ]; then
 			L0Size=$(getBkupSize "$SDIR" 0 "$L0Date")
 			echo "getBkupSize" ${SDIR}_L0_${L0Date} $L0Size
@@ -215,15 +260,17 @@ while read line; do
 			L2Size=$(getBkupSize "$SDIR" 2 "$L2Date")
 			echo "getBkupSize" ${SDIR}_L2_${L2Date} $L2Size
 		fi
-		echo "chooseLevel: L0Size " $L0Size "L1Size " $L1Size "L2Size " $L2Size
 
+		# If level is set to auto, find the correct level for this backup with
+		# chooseLevel, else just do the backup at the requested level.
 		if [ "$LVL" -eq 99 ]; then
+			echo "chooseLevel: L0Size " $L0Size "L1Size " $L1Size "L2Size " $L2Size
 			BKUP_LVL="$(chooseLevel $L0Size $L1Size $L2Size)"
 		else
 			BKUP_LVL="$LVL"
 		fi
 
-		#find most recent backup date
+		#find most recent backup date and corresponding tar file
 		if [ "$L0Date" -gt "$L1Date" ]; then
 			if [ "$L0Date" -gt "$L2Date" ]; then
 				LASTTAR="${TGT_PREFIX}/${TDIR}/${SDIR}/L0/${SDIR}_L0_${L0Date}.tar"
@@ -240,17 +287,16 @@ while read line; do
 
 		echo "Most recent backup was ${LASTTAR}"
 
-		# Find if files changed since $LASTTAR
+		# Only do backup if files changed since $LASTTAR
 		changedSince ${SRC_PREFIX}/${SDIR} ${LASTTAR}
 		if [ $? -eq 0 ]; then
 			echo "Performing level ${BKUP_LVL} backup of ${SRC_PREFIX}/${SDIR}"
-			purge "$SDIR" "${BKUP_LVL}"
 			${SCRIPTROOT}/incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${BKUP_LVL}
 		else
 			echo "$SDIR: no files changed, backup skipped"
 		fi
-
 	fi
+	# space between logs for each row in cfg file
 	echo
 done < $CFG_FILE > $LOG_FILE 2>&1
 

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Contains all the platform-specific scripting to support NAS and OS X
+
 # PLATFORM=`uname -a | cut -d ' ' -f 1 | tr '[A-Z]' '[a-z]'`
 # returns darwin for mac, linux for NAS
 if [ "$PLATFORM" == "darwin" ]; then

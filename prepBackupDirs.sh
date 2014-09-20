@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# No need to log since it's run by a user from a shell. They can look at stdout
+
 PLATFORM=`uname -a | cut -d ' ' -f 1 | tr '[A-Z]' '[a-z]'`
 # returns darwin for mac, linux for NAS
 if [ "$PLATFORM" == "darwin" ]; then
@@ -10,14 +12,16 @@ fi
 
 source $SCRIPTROOT/platform.sh
 
+# holds list of directories already created
 TGT_PROCD=""
+
+# string_contains big_string substring
+# returns 0 if substring is found in big_string, 1 otherwise
 
 string_contains (){
   local instring=$1
   local seeking=$2
   local in=1
-
-#  echo instring $instring seeking $seeking
 
   for element in `echo $instring | sed s/:/\\ /g`; do
 	   if [ "$element" == "$seeking" ]; then
@@ -28,22 +32,28 @@ string_contains (){
      return $in
 }
 
+# create each target directory, then add its name to TGT_PROCD
+# so that subsequent loops can tell if it's already been created
+
 while read line; do
   SDIR=`echo $line |cut -d \  -f 1`
   TDIR=`echo $line |cut -d \  -f 2`
-
-#  echo $SDIR $TDIR
 
   if string_contains ${TGT_PROCD} $TDIR; then
 	   echo $TDIR "already created, skipping..."
   else
     echo "Creating directory at" $TGT_PREFIX/$TDIR
     mkdir -p $TGT_PREFIX/$TDIR
+
+    #directory might already exist before call to prepBackupDirs
     rm -rf $TGT_PREFIX/$TDIR/*
-    echo "Creating filesystem at " $TGT_PREFIX/$TDIR
+
+    # append target dir to colon-separated TGT_PROCD string
 	  TGT_PROCD=${TGT_PROCD}":"${TDIR}
-#    echo TGT_PROCD is ${TGT_PROCD}
+
+    echo "Creating filesystem at " $TGT_PREFIX/$TDIR
   fi
+
   mkdir $TGT_PREFIX/$TDIR/$SDIR
   mkdir $TGT_PREFIX/$TDIR/$SDIR/L0
   mkdir $TGT_PREFIX/$TDIR/$SDIR/L1
