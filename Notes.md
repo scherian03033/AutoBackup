@@ -124,7 +124,7 @@ The SNAR_FILE can be /dev/null since the tar chunk knows what to do.
 		* when L0 already exists - P: saved snar, new backup, saved log
 	* L1
 		* when L0 snar doesn't exist - P: declared error, saved log
-		* when L0 snar exists, tar no - F: created incremental w/o base
+		* when L0 snar exists, tar no - P: declared error, saved log
 		* when L0 exists and L1 doesn't exist - P: created L1, log
 		* when L0 exists and L1 exists - P: saved snar, new L1, saved log
 	* L2
@@ -162,7 +162,7 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 
 #TO DO
 * Thorough system test
-* Fix case of snar present, dependent tar missing, still does incremental
+* Fix case of snar present, dependent tar missing, still does incremental. Perhaps it's not a defect worth fixing since auto backup will check for tar file sizes to determine appropriate level. If tar files are missing, doesn't do the backup. Alternately, just exploit the auto logic to decide if there's a problem. Seems easy. Will do that.
 
 ## DONE
 * Dynamically check OS and set up tar, chunk, paste using uname -a.

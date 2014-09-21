@@ -273,7 +273,7 @@ while read line; do
 			BKUP_LVL="$LVL"
 		fi
 
-		#find most recent backup date and corresponding tar file
+		# find most recent backup date and corresponding tar file
 		if [ "$L0Date" -gt "$L1Date" ]; then
 			if [ "$L0Date" -gt "$L2Date" ]; then
 				LASTTAR="${TGT_PREFIX}/${TDIR}/${SDIR}/L0/${SDIR}_L0_${L0Date}.tar"
@@ -289,6 +289,20 @@ while read line; do
 		fi
 
 		echo "Most recent backup was ${LASTTAR}"
+
+		# Check backups exist at lower levels before doing incremental
+		if [ "$BKUP_LVL" -gt 1 ]; then
+			if [ "$L1Size" -eq 0 ]; then
+				echo "Missing L1 backup, exiting..."
+				tellFailure
+			fi
+		fi
+		if [ "$BKUP_LVL" -gt 0 ]; then
+			if [ "$L0Size" -eq 0 ]; then
+				echo "Missing L0 backup, exiting..."
+				tellFailure
+			fi
+		fi
 
 		# Only do backup if files changed since $LASTTAR
 		changedSince ${SRC_PREFIX}/${SDIR} ${LASTTAR}
