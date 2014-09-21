@@ -197,7 +197,10 @@ cut -d . -f 1|sort`
 
 # Save AutoBackup.log
 DT=`date +%Y%m%d%H%M`
-mv $LOG_FILE ${LOG_FILE/.log/_$DT.log}
+
+if [ -f $LOG_FILE ]; then
+	mv $LOG_FILE ${LOG_FILE/.log/_$DT.log}
+fi
 
 # Loop over every line in the config file which looks like srcDir tgtDir
 while read line; do
@@ -292,6 +295,9 @@ while read line; do
 		if [ $? -eq 0 ]; then
 			echo "Performing level ${BKUP_LVL} backup of ${SRC_PREFIX}/${SDIR}"
 			${SCRIPTROOT}/incBackup.sh ${SRC_PREFIX}/${SDIR} ${TGT_PREFIX}/${TDIR} ${BKUP_LVL}
+			if [ $? -ne 0 ]; then
+				tellFailure
+			fi
 		else
 			echo "$SDIR: no files changed, backup skipped"
 		fi

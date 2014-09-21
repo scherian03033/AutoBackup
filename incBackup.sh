@@ -89,16 +89,27 @@ fi
 # backup against this backup.
 
 if [ "$SNAR_LVL" -ne "$LVL" ]; then
-  cp ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${SNAR_LVL}.snar \
-   ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar
+  if [ -f ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${SNAR_LVL}.snar ]; then
+    cp ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${SNAR_LVL}.snar \
+     ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar
+  else
+    echo "Snar file: ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${SNAR_LVL}.snar not found, exiting..."
+    exit 1
+  fi
 fi
 
-#Find the relative source path so that restores are platform-independent
+# Find the relative source path so that restores are platform-independent
 cd $SRC_PREFIX
 RELSRC="${SRC##$SRC_PREFIX}"
 
-${TAR} -g ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar -M -L ${CHUNK} \
-  -F ${SCRIPTROOT}/mpTarHelper.sh \
-  -cvpf ${TGT}/${STRIP_SRC}/L${LVL}/${STRIP_SRC}_L${LVL}_${DATE}.tar .${RELSRC}
+# for L0 backups, just do it. For higher levels, make sure snar file exists
+if [ "$LVL" -eq 0 ] || [ -f ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar ]; then
+  ${TAR} -g ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar -M -L ${CHUNK} \
+    -F ${SCRIPTROOT}/mpTarHelper.sh \
+    -cvpf ${TGT}/${STRIP_SRC}/L${LVL}/${STRIP_SRC}_L${LVL}_${DATE}.tar .${RELSRC}
+else
+  echo "Snar file: ${TGT}/${STRIP_SRC}/${STRIP_SRC}_L${LVL}.snar not found, exiting..."
+  exit 1
+fi
 
 echo "Done"

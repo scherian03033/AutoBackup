@@ -70,7 +70,8 @@ The SNAR_FILE can be /dev/null since the tar chunk knows what to do.
 1. Backup of a single source directory - automatic
 	* First in cfg file
 	* Last in cfg file
-2. Backup of a single source directory - specified level
+2. Detect that no backup is required
+3. Backup of a single source directory - specified level
 	* L0
 		* when L0 doesn't exist
 		* when L0 already exists
@@ -82,7 +83,7 @@ The SNAR_FILE can be /dev/null since the tar chunk knows what to do.
 		* when L1 doesn't exist
 		* when L1 exists and L2 doesn't exist
 		* when L1 exists and L2 exists
-3. Backup of a single source directory - auto
+4. Backup of a single source directory - auto
 	* when no backup exists
 	* when L0 exists
 	* when L0 and L1 exist
@@ -92,8 +93,8 @@ The SNAR_FILE can be /dev/null since the tar chunk knows what to do.
 		* and L0 is the correct next level
 		* and L1 is the correct next level
 		* and L2 is the correct next level
-4. Backup of all source directories - auto (variants should be covered by above)
-5. Purge of old files
+5. Backup of all source directories - auto (variants should be covered by above)
+6. Purge of old files
 
 ### incRestore.sh
 1. when most recent backup is an L0
@@ -112,25 +113,25 @@ The SNAR_FILE can be /dev/null since the tar chunk knows what to do.
 1. Run with no AutoBackup target dir - created it. P
 2. Run with stuff already in target directories - deleted stuff. P
 
-###asdf
+###doBackup.sh
+1. Auto backup of single source
+	* first source in cfg file L0, L1, L2, L0 - P
+	* last source in cfg file L0, L1, L2, L0 - P
+2. Auto backup of last source - no file change, no backup - P
+3. Backup of NetSanjay
+	* L0
+		* when L0 doesn't exist - P: created L0 backup, log
+		* when L0 already exists - P: saved snar, new backup, saved log
+	* L1
+		* when L0 snar doesn't exist - P: declared error, saved log
+		* when L0 snar exists, tar no - F: created incremental w/o base
+		* when L0 exists and L1 doesn't exist - P: created L1, log
+		* when L0 exists and L1 exists - P: saved snar, new L1, saved log
+	* L2
+		* when L1 doesn't exist
+		* when L1 exists and L2 doesn't exist
+		* when L1 exists and L2 exists
 
-added pdf to NetSanjay (7.4MB)
-
-doBackup.sh all auto - created NetSanjay_L0<1432>.tar and NetSanjay_L0.snar
-
-added PreparedToServe to NetSanjay (1.2MB)
-
-doBackup.sh all auto - created NetSanjay_L1<1434>.tar and NetSanjay_L1.snar
-
-added IMG_0838.jpg to NetSanjay (2.9MB)
-
-doBackup.sh all auto - created NetSanjay_L2<1437>.tar and NetSanjay_L2.snar
-
-added IMG_0839.jpg to NetSanjay (2.6 MB)
-
-doBackup.sh all auto - created NetSanjay_L0<1440>.tar and saved away NetSanjay_L0_<date>.snar before creating new NetSanjay_L0.snar.
-
-Result: old L1 and L2 are now unrestorable because old L0 snar is lost.
 ## Test Status
 1. Test creation of L0, L1, L2 backup sets.
 2. Test wrap back to L0 and correct saving away of snar files.
@@ -138,7 +139,7 @@ Result: old L1 and L2 are now unrestorable because old L0 snar is lost.
 4. Test restore of backups from <date>-saved tar/snar set.
 5. Test purge removes correct files.
 
-## Defects
+## Interesting Defects
 ### D1: Snar overwrite
 #### Problem:
 currently snar files are getting overwritten so only the most recent backup is recoverable. Is this okay? It means for any given source directory, there is only one recoverable L0, L1 and L2 backup set.
@@ -151,16 +152,17 @@ Locally, there should be some number of backup sets, purged by age policy. For n
 a. add a snar set ID to the filename.
 b. when deleting a snar file, move it to a date-keyed name instead. Will need some care around handling L1 and L2 snar files - done
 c. when creating a new backup, purge all backups for that target and level that are older than the purge period for that level. Given the decreasing retention period as level goes up, no higher level backup should ever exist when its lower level dependency has been purged.
-It turned out this was not a bug at all. The snar file is not required when restoring tar files. You just have to restore the files in the right order.
 
+It turned out this was not a bug at all. The snar file is not required when restoring tar files. You just have to restore the files in the right order.
+### D2: NAS Scheduler doesn't run scripts
 ####Problem####
 Synology scripts were not running from the scheduler but ran fine from command line.
 ####Solution####
 There is almost no PATH loaded when scripts are run from the scheduler. This means you have to provide absolute paths for everything, including other scripts sourced from the running script and utilities. Synology also couldn't handle "date -v" so find was used for purging.  
 
 #TO DO
-* Thorough code walkthrough / unit test
 * Thorough system test
+* Fix case of snar present, dependent tar missing, still does incremental
 
 ## DONE
 * Dynamically check OS and set up tar, chunk, paste using uname -a.
@@ -179,3 +181,4 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 * make purge handle old Autobackup.log files
 * fix getBkupSize function for Linux - no paste, replace with perl
 * Make sure "no file change" takes precedence over new backup level needed
+* Thorough code walkthrough / unit test
