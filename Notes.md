@@ -94,7 +94,7 @@ The SNAR_FILE can be /dev/null since the tar chunk knows what to do.
 		* and L1 is the correct next level
 		* and L2 is the correct next level
 5. Backup of all source directories - auto (variants should be covered by above)
-6. Purge of old files
+6. Purge of old files - P: tar, snar, logs deleted
 
 ### incRestore.sh
 1. when most recent backup is an L0
@@ -128,9 +128,23 @@ The SNAR_FILE can be /dev/null since the tar chunk knows what to do.
 		* when L0 exists and L1 doesn't exist - P: created L1, log
 		* when L0 exists and L1 exists - P: saved snar, new L1, saved log
 	* L2
-		* when L1 doesn't exist
-		* when L1 exists and L2 doesn't exist
-		* when L1 exists and L2 exists
+		* when L1 snar doesn't exist - P: declared error, saved log
+		* when L1 snar exists, tar no - P: declared error, saved log
+		* when L1 exists and L2 doesn't exist - P: created L2, log
+		* when L1 exists and L2 exists - P: saved snar, new L2, saved log
+4. Auto backup of NetSanjay
+	* when no backup exists - P: created L0 backup, log
+	* when L0 exists
+		* no change - P: detected no change, made backup, log
+		* changes - P: made L1 backup, log
+	* when L0 and L1 exist
+		* and L0 is the correct next level - P
+		* and L2 is the correct next level - P
+	* when L0, L1 and L2 exist
+		* and L0 is the correct next level - P
+		* and L1 is the correct next level - P
+		* and L2 is the correct next level - P
+5. Backup of all source directories - auto (variants should be covered by above) [made same changes to NetSanjay, NetRecordings] - P, backed up when appropriate, skipped when appropriate, chose sizes correctly.
 
 ## Test Status
 1. Test creation of L0, L1, L2 backup sets.
@@ -158,11 +172,16 @@ It turned out this was not a bug at all. The snar file is not required when rest
 ####Problem####
 Synology scripts were not running from the scheduler but ran fine from command line.
 ####Solution####
-There is almost no PATH loaded when scripts are run from the scheduler. This means you have to provide absolute paths for everything, including other scripts sourced from the running script and utilities. Synology also couldn't handle "date -v" so find was used for purging.  
+There is almost no PATH loaded when scripts are run from the scheduler. This means you have to provide absolute paths for everything, including other scripts sourced from the running script and utilities. Synology also couldn't handle "date -v" so find was used for purging.
+### D3: Lower level tar dependencies
+####Problem####
+AutoBackup only checks to see that a lower level tar file exists, not that it is the one corresponding to the snar file being used. May also be a case where the snar file is the wrong one.
+  
 
 #TO DO
 * Thorough system test
-* Fix case of snar present, dependent tar missing, still does incremental. Perhaps it's not a defect worth fixing since auto backup will check for tar file sizes to determine appropriate level. If tar files are missing, doesn't do the backup. Alternately, just exploit the auto logic to decide if there's a problem. Seems easy. Will do that.
+* Check to see if incremental backups against different snars result in different increments with the same underlying tar files, i.e. is snar the only data used for increment computation?
+
 
 ## DONE
 * Dynamically check OS and set up tar, chunk, paste using uname -a.
@@ -182,3 +201,4 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 * fix getBkupSize function for Linux - no paste, replace with perl
 * Make sure "no file change" takes precedence over new backup level needed
 * Thorough code walkthrough / unit test
+* Fix case of snar present, dependent tar missing, still does incremental. Perhaps it's not a defect worth fixing since auto backup will check for tar file sizes to determine appropriate level. If tar files are missing, doesn't do the backup. Alternately, just exploit the auto logic to decide if there's a problem. Seems easy. Will do that.
