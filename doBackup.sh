@@ -101,7 +101,7 @@ changedSince() {
 
 	if [ -f $refFile ]; then
 		# find all files newer than refFile in dir
-		local fileList=`find $dir -newer $refFile -print`
+		local fileList=`find $dir -newer $refFile -print |head -n 2`
 
 		# if the result list is empty, no change
 		if [ -z "${fileList// }" ]; then
