@@ -140,8 +140,6 @@ purge() {
 		tellFailure
 	fi
 
-	echo "purge called on $1 $2, cutoff $cutoff"
-
 	# purge tar files
 	find ${TGT_PREFIX} -name "${tgtDir}_L${level}_*.tar*" \
 		-mtime +${cutoff} -exec rm {} \;
