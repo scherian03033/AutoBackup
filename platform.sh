@@ -35,7 +35,7 @@ tellSuccess() {
 	if [ "$PLATFORM" == "darwin" ]; then
 		osxnotify "Backup Succeeded" "Happy Happy Joy Joy"
 	elif [ "$PLATFORM" == "linux" ]; then
-		${NOTIFY} LocalBackupFinishedMultiVersion
+		${NOTIFY} BackupTaskFinished
 	fi
 }
 
@@ -43,7 +43,7 @@ tellFailure() {
 	if [ "$PLATFORM" == "darwin" ]; then
 		osxnotify "Backup Failed" "Go look at logs"
 	elif [ "$PLATFORM" == "linux" ]; then
-		${NOTIFY} LocalBackupErrorMultiVersion
+		${NOTIFY} BackupTaskFailed
 	fi
 	exit 1
 }
