@@ -1,5 +1,5 @@
-#Design Concept
-## Operational Process
+# Design Concept
+## Backup Process
 	prepBackupDirs.sh - reads AutoBackup.cfg and creates a target directory structure to hold all the backups.
 	doBackup.sh
 		find all tar files in target directory
@@ -12,6 +12,11 @@
 				figure out appropriate SNAR level
 				copy snar file to new snar file for backup level if necessary
 				mpTarHelper.sh
+
+## Restore Process
+	set up a new Synology CloudSync task to retrieve backups
+	copy backup folder to target directory as configured in platform.sh
+	run incRestore.sh on each tar file name in order from L0->L2, pointing at the same destination each time. That destination should probably be different from the original location of the directory to be restored for comparison's sake.
 
 ### SNAR file use
 Each backup level gets its own copy of the snar file so an L1 is inclusive of the L0 changes to date and an L2 is inclusive of the L1 changes to date. Thus, if an L0 snar is overwritten, the prior L1 backup is still accessible using the L1 snar file.
@@ -42,12 +47,9 @@ Once things wrap back to L0, we must save a copy of the original L0 snar file aw
 ### Local Storage
 Keep local backups until they trigger the purge policy.
 
-### Offsite Glacier Storage
-	When backup is complete
-		compare the most recent backup set to what's on Glacier
-		If it's completely new
-			Upload it
-		Delete any backup set that's older than 3 months
+### Offsite Storage
+	Backup files are currently sync'ed to Amazon Cloud Drive from NAS
+	Sync is upload only and space available is unlimited so space management is manual
 
 ## Purging Policy
 * purge L0 backups after 1 year
@@ -97,11 +99,12 @@ The SNAR_FILE can be /dev/null since the tar chunk knows what to do.
 6. Purge of old files - P: tar, snar, logs deleted
 
 ### incRestore.sh
+Make sure the tar files have been put back into the backup target directory before attempting to restore them as the script looks for them there, not by absolute path.
 1. when most recent backup is an L0
 2. when most recent backup is an L1
 	* and older L1 exists
 	* and older L1 and L2 exist
-	* and corresponding L0 is missing 
+	* and corresponding L0 is missing
 3. when most recent backup is an L2
 	* and older L1 exists but older L0 is missing
 	* and older L1 is missing but older L0 exists
@@ -176,7 +179,7 @@ There is almost no PATH loaded when scripts are run from the scheduler. This mea
 ### D3: Lower level tar dependencies
 ####Problem####
 AutoBackup only checks to see that a lower level tar file exists, not that it is the one corresponding to the snar file being used. May also be a case where the snar file is the wrong one.
-  
+
 
 #TO DO
 * Thorough system test
