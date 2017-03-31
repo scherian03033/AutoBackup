@@ -7,12 +7,14 @@
 if [ "$PLATFORM" == "darwin" ]; then
 	SRC_PREFIX=`pwd`/volume1
 	TGT_PREFIX=`pwd`/volumeUSB1/usbshare/AutoBackup
+	SYNC_DIR=`pwd`/NetBackup/AutoBackup
 	TAR=gtar
 #chunk size set up for mac testing of small files
 	CHUNK=2048
 elif [ "$PLATFORM" == "linux" ]; then
 	SRC_PREFIX=/volume1
 	TGT_PREFIX=/volumeUSB1/usbshare/AutoBackup
+	SYNC_DIR=/NetBackup/AutoBackup
 	TAR=tar
 	NOTIFY=/usr/syno/bin/synonotify
 #chunk size set up to fit on a single DVD

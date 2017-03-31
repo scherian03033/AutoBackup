@@ -324,4 +324,10 @@ while read line; do
 	echo
 done < $CFG_FILE > $LOG_FILE 2>&1
 
-tellSuccess
+if [ -d ${SYNC_DIR} ]; then
+	rsync -avz --update -delete ${TGT_PREFIX}/ ${SYNC_DIR}
+	tellSuccess
+else
+	echo "Sync Directory does not exist"
+	tellFailure
+fi >> $LOG_FILE 2>&1
