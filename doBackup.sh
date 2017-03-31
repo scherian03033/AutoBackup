@@ -320,14 +320,9 @@ while read line; do
 			echo "$SDIR: no files changed, backup skipped"
 		fi
 	fi
+
 	# space between logs for each row in cfg file
 	echo
 done < $CFG_FILE > $LOG_FILE 2>&1
 
-if [ -d ${SYNC_DIR} ]; then
-	rsync -avz --update -delete ${TGT_PREFIX}/ ${SYNC_DIR}
-	tellSuccess
-else
-	echo "Sync Directory does not exist"
-	tellFailure
-fi >> $LOG_FILE 2>&1
+source $SCRIPTROOT/doSync.sh
